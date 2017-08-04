@@ -93,10 +93,10 @@ class VelocityModel(object):
 
 class LinearVelocityModel(VelocityModel):
 
-    _param_names = ['dv_dl', 'v0', 'lnV', 'f_mg', 'f_rr']
+    _param_names = ['dv_dl', 'v0', 'lnV', 'f_mg', 'f_rr', 'l0']
 
     # mixture model for everything
-    def ln_prior(self, dv_dl, v0, lnV, f_mg, f_rr):
+    def ln_prior(self, dv_dl, v0, lnV, f_mg, f_rr, l0):
 
         if dv_dl > 50. or dv_dl < -50:
             return -np.inf
@@ -107,7 +107,7 @@ class LinearVelocityModel(VelocityModel):
         if lnV < 1E-1 or lnV > 9.: # < 1 km/s or > 90 km/s
             return -np.inf
 
-        if f_mg > 1. or f_mg < 0.3:
+        if f_mg > 1. or f_mg < 0.2:
             return -np.inf
 
         if f_rr > 1. or f_rr < 0.:
@@ -122,7 +122,7 @@ class LinearVelocityModel(VelocityModel):
         V1 = tracer[2]**2 + self.halo_sigma_v**2
         V2 = tracer[2]**2 + np.exp(lnV)
         term1 = ln_normal(tracer[1], 0., V1) # 0 = halo mean velocity
-        term2 = ln_normal(tracer[1], dv_dl*tracer[0] + v0, V2)
+        term2 = ln_normal(tracer[1], dv_dl*(tracer[0]-kwargs['l0']) + v0, V2)
         return np.array([term1, term2])
 
     def ln_likelihood(self, **kw_pars):
